@@ -2,8 +2,8 @@ package main
 
 import (
 	"bufio"
-	"github.com/pkg/errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"log"
