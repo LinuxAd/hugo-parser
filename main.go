@@ -1,20 +1,31 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
 )
 
 func main() {
-	cwd := getCwd()
-	err := preFlightChecks(cwd)
+	cwd := flag.String("d", "cwd", "the directory of files to parse")
+	flag.Parse()
+
+	var dir string
+
+	if *cwd != "cwd" {
+		dir = *cwd
+	} else {
+		dir = getCwd()
+	}
+
+	err := preFlightChecks(dir)
 	if err != nil {
 		log.Panic(fmt.Sprint("pre-flight checks error:", err))
 	}
 
 
-	files, err := getFileList(cwd)
+	files, err := getFileList(dir)
 	if err != nil {
 		log.Panic(err)
 	}
