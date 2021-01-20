@@ -13,10 +13,10 @@ func main() {
 
 	var dir string
 
-	if *cwd != "cwd" {
-		dir = *cwd
-	} else {
+	if *cwd == "cwd" ||  *cwd == "." {
 		dir = getCwd()
+	} else {
+		dir = *cwd
 	}
 
 	err := preFlightChecks(dir)
