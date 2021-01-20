@@ -47,8 +47,11 @@ func TestLinesFromReader(t *testing.T) {
 }
 
 func TestGetFileList(t *testing.T) {
+	cwd, _ := os.Getwd()
+
 	type args struct {
 		files int
+		dir string
 	}
 	tests := []struct {
 		name    string
@@ -56,9 +59,10 @@ func TestGetFileList(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"current dir",
+			"valid dir",
 			args{
 				3,
+				cwd,
 			},
 			false,
 		},
@@ -66,22 +70,36 @@ func TestGetFileList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			testDir := tt.name+"-testdir"
+			d, err := ioutil.TempDir(tt.args.dir, "")
+			if err != nil {
+				t.Errorf("error creating temp directory: %v", err)
+			}
+			t.Cleanup(func() {
+				CleanDir(t, d)
+			})
 
-			TempDir(t,testDir)
-			defer CleanDir(t,testDir)
-			want := TempFiles(t, testDir, tt.args.files)
+			want := []string{d}
+			w := TempFiles(t, d, tt.args.files)
+			want = append(want, w...)
 
-			got, err := getFileList(testDir)
+			got, err := getFileList(d)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getFileList() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if len(want) != len(got) {
-				t.Errorf("unequal lengths got = %v, want %v", got, want)
+				t.Errorf("unequal lengths got: %v want: %v", len(got), len(want))
 			}
 			if !EqualSlices(t, got, want) {
-				t.Errorf("getFileList() got = %v, want %v", got, want)
+				t.Log("got")
+				for _, i := range got {
+					t.Log(i)
+				}
+				t.Log("want")
+				for _, i := range want {
+					t.Log(i)
+				}
+				t.Errorf("slices not equal")
 			}
 		})
 	}
@@ -107,25 +125,27 @@ func TestGetTitle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			expect := "Test File"
 			got, err := getTitle(tt.args)
 			if err != nil {
 				t.Errorf("expected no error, got: %v", err)
 			}
-			if got != expect {
-				t.Errorf("got: \"%v\" expected: \"%v\"", got, expect)
+			if got != tt.want{
+				t.Errorf("got: \"%v\" expected: \"%v\"", got, tt.want)
 			}
 		})
 	}
 
 }
 
+func TempFiles(t *testing.T,dir string, number int) []string {
 
-func TempDir(t *testing.T, name string) {
 	t.Helper()
-	if err := os.Mkdir(name, 0755); err != nil {
-		t.Errorf("error creating test dir: %v", err)
+	var files []string
+	for i := 0; i < number; i++ {
+		f, _ := ioutil.TempFile(dir, "*.md")
+		files = append(files, f.Name())
 	}
+	return files
 }
 
 func CleanDir(t *testing.T, name string) {
@@ -133,27 +153,6 @@ func CleanDir(t *testing.T, name string) {
 	if err := os.RemoveAll(name); err != nil {
 		t.Errorf("error removing dir: %v", err)
 	}
-}
-
-func TempFiles(t *testing.T,dir string, number int) []string {
-	t.Helper()
-
-	var files []string
-	patt := "test-*"
-
-	for i := 0; i < number; i++ {
-		f, err := ioutil.TempFile(dir, patt)
-		if err != nil {
-			t.Errorf("error creating tempfile: %v. args: %v %v", err, dir, patt)
-		}
-		_, err = f.WriteString(t.Name() + " test content")
-		if err != nil {
-			t.Errorf("error writing test content to file: %v", f.Name())
-		}
-		_ = f.Close()
-		files = append(files, f.Name())
-	}
-	return files
 }
 
 func EqualSlices(t *testing.T, a, b []string) bool {
