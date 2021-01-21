@@ -62,7 +62,7 @@ func alreadyPresent(lines []string, str string) bool {
 	return false
 }
 
-func (f *frontMatter) addToFile(path string) error {
+func (f *frontMatter) addToFile(path string, titleIndex int) error {
 	b, err := f.MarshalYAML()
 	if err != nil {
 		return err
@@ -73,7 +73,6 @@ func (f *frontMatter) addToFile(path string) error {
 	if err != nil {
 		return err
 	}
-	h := regexp.MustCompile(header)
 
 	fileContent := ""
 	for i, line := range lines {
@@ -82,7 +81,7 @@ func (f *frontMatter) addToFile(path string) error {
 			fileContent += str
 		}
 		// if the line is a main header and contains the title string, remove it
-		if h.MatchString(line) && strings.Contains(line, f.Title) {
+		if i == titleIndex {
 			line = ""
 		}
 		fileContent += line

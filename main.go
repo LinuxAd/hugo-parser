@@ -49,7 +49,7 @@ func addFrontMatter(files []string) error {
 			return err
 		}
 
-		title, _, err := getTitle(lines)
+		title, i, err := getTitle(lines)
 		if err != nil {
 			return err
 		}
@@ -57,7 +57,7 @@ func addFrontMatter(files []string) error {
 
 		f := frontMatter{Title: title}
 
-		err = f.addToFile(file)
+		err = f.addToFile(file, i)
 		if err != nil {
 			return err
 		}
