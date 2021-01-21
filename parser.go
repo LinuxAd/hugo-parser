@@ -48,6 +48,9 @@ func LinesFromReader(r io.Reader) ([]string, error) {
 }
 
 func alreadyPresent(lines []string,str string) bool {
+	if len(lines) < 2 {
+		return false
+	}
 	if strings.Contains(lines[0], "---") || strings.Contains(lines[1], "---"){
 		return true
 	}
