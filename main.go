@@ -49,7 +49,7 @@ func addFrontMatter(files []string) error {
 			return err
 		}
 
-		title, index, err := getTitle(lines)
+		title, _, err := getTitle(lines)
 		if err != nil {
 			return err
 		}
