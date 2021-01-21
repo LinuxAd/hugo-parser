@@ -13,7 +13,7 @@ func main() {
 
 	var dir string
 
-	if *cwd == "cwd" ||  *cwd == "." {
+	if *cwd == "cwd" || *cwd == "." {
 		dir = getCwd()
 	} else {
 		dir = *cwd
@@ -23,7 +23,6 @@ func main() {
 	if err != nil {
 		log.Panic(fmt.Sprint("pre-flight checks error:", err))
 	}
-
 
 	files, err := getFileList(dir)
 	if err != nil {
@@ -50,19 +49,15 @@ func addFrontMatter(files []string) error {
 			return err
 		}
 
-		title, err := getTitle(lines)
+		title, index, err := getTitle(lines)
 		if err != nil {
 			return err
 		}
 		log.Println("title: ", title)
 
 		f := frontMatter{Title: title}
-		front, err := f.MarshalYAML()
-		if err != nil {
-			return err
-		}
 
-		err = InsertStringToFile(file, string(front))
+		err = f.addToFile(file)
 		if err != nil {
 			return err
 		}

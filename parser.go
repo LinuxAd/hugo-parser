@@ -13,6 +13,11 @@ import (
 	"strings"
 )
 
+const (
+	link = `\[(.+)\]\(.+\)`
+	header = `^#(.+)$`
+)
+
 type frontMatter struct {
 	Title string
 }
@@ -47,31 +52,38 @@ func LinesFromReader(r io.Reader) ([]string, error) {
 	return lines, nil
 }
 
-func alreadyPresent(lines []string,str string) bool {
+func alreadyPresent(lines []string, str string) bool {
 	if len(lines) < 2 {
 		return false
 	}
-	if strings.Contains(lines[0], "---") || strings.Contains(lines[1], "---"){
+	if strings.Contains(lines[0], "---") || strings.Contains(lines[1], "---") {
 		return true
 	}
 	return false
 }
 
-func InsertStringToFile(path, str string) error {
+func (f *frontMatter) addToFile(path string) error {
+	b, err := f.MarshalYAML()
+	if err != nil {
+		return err
+	}
+	str := string(b)
+
 	lines, err := getFileLines(path)
 	if err != nil {
 		return err
 	}
-
-	if alreadyPresent(lines, str){
-		log.Println("no need to edit")
-		return nil
-	}
+	h := regexp.MustCompile(header)
 
 	fileContent := ""
 	for i, line := range lines {
-		if i == 0 {
+		// if it's the first line in file and the frontMatter isn't already there, add it
+		if i == 0 && !alreadyPresent(lines, str) {
 			fileContent += str
+		}
+		// if the line is a main header and contains the title string, remove it
+		if h.MatchString(line) && strings.Contains(line, f.Title) {
+			line = ""
 		}
 		fileContent += line
 		fileContent += "\n"
@@ -122,24 +134,23 @@ func getFileList(cwd string) ([]string, error) {
 			return nil
 		}
 
-
 		files = append(files, p)
 		return nil
 	}
 
 	err := filepath.Walk(cwd, w)
 
-	return files,err
+	return files, err
 }
 
-func getTitle(lines []string) (string, error) {
-	y := len(lines) / 2 + 1 // adding plus one helps to avoid problems if file is only 1 line
+func getTitle(lines []string) (string, int, error) {
+	y := len(lines)/2 + 1 // adding plus one helps to avoid problems if file is only 1 line
 
 	var title string
+	var index int
 	var err error
 
-	pat := `^#(.+)$`
-	r := regexp.MustCompile(pat)
+	r := regexp.MustCompile(header)
 
 	for x := 0; x < y; x++ {
 		l := lines[x]
@@ -149,20 +160,21 @@ func getTitle(lines []string) (string, error) {
 			continue
 		}
 		if s[1] != "" {
-			return titleFormatter(s[1]), nil
+			title = titleFormatter(title)
+			index = x
+			return title, index, err
 		}
 	}
 
-	return title, err
+	return title, index, err
 }
 
 func titleFormatter(title string) string {
-	l := `\[(.+)\]\(.+\)`
-	link := regexp.MustCompile(l)
+	l := regexp.MustCompile(link)
 	t := strings.TrimSpace(title)
-	if link.MatchString(t) {
+	if l.MatchString(t) {
 		// title is a link
-		g := link.FindStringSubmatch(t)
+		g := l.FindStringSubmatch(t)
 		return strings.Title(g[1])
 	}
 	return strings.Title(t)

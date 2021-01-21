@@ -23,19 +23,19 @@ func TestGetCwd(t *testing.T) {
 }
 
 func TestLinesFromReader(t *testing.T) {
-	type TestCase struct{
+	type TestCase struct {
 		testString string
-		expected []string
+		expected   []string
 	}
-	tt := TestCase {
-		 "---\ntitle: \"A Title\"\n",
+	tt := TestCase{
+		"---\ntitle: \"A Title\"\n",
 		[]string{
 			"---",
 			"title: \"A Title\"",
 		},
 	}
 
-	t.Run("test file read", func(t *testing.T){
+	t.Run("test file read", func(t *testing.T) {
 		got, err := LinesFromReader(strings.NewReader(tt.testString))
 		if err != nil {
 			t.Errorf("LinesFromReader error: %v", err)
@@ -51,7 +51,7 @@ func TestGetFileList(t *testing.T) {
 
 	type args struct {
 		files int
-		dir string
+		dir   string
 	}
 	tests := []struct {
 		name    string
@@ -104,11 +104,12 @@ func TestGetFileList(t *testing.T) {
 }
 
 func TestGetTitle(t *testing.T) {
-	tests := []struct{
-		name string
-		args []string
-		want string
-		wantErr bool
+	tests := []struct {
+		name      string
+		args      []string
+		want      string
+		wantIndex int
+		wantErr   bool
 	}{
 		{
 			name: "quick test",
@@ -116,26 +117,30 @@ func TestGetTitle(t *testing.T) {
 				"# A Title",
 				"some content",
 			},
-			want: "A Title",
-			wantErr: false,
+			want:      "A Title",
+			wantIndex: 0,
+			wantErr:   false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getTitle(tt.args)
+			got, index, err := getTitle(tt.args)
 			if err != nil {
 				t.Errorf("expected no error, got: %v", err)
 			}
-			if got != tt.want{
+			if got != tt.want {
 				t.Errorf("got: \"%v\" expected: \"%v\"", got, tt.want)
+			}
+			if index != tt.wantIndex {
+				t.Errorf("got: \"%v\" expected: \"%v\"", index, tt.wantIndex)
 			}
 		})
 	}
 
 }
 
-func TempFiles(t *testing.T,dir string, number int) []string {
+func TempFiles(t *testing.T, dir string, number int) []string {
 
 	t.Helper()
 	var files []string
@@ -159,7 +164,7 @@ func EqualSlices(t *testing.T, a, b []string) bool {
 		return false
 	}
 	for _, v := range a {
-		if !InSlice(t, b, v){
+		if !InSlice(t, b, v) {
 			return false
 		}
 	}
