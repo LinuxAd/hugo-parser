@@ -103,43 +103,6 @@ func TestGetFileList(t *testing.T) {
 	}
 }
 
-func TestGetTitle(t *testing.T) {
-	tests := []struct {
-		name      string
-		args      []string
-		want      string
-		wantIndex int
-		wantErr   bool
-	}{
-		{
-			name: "quick test",
-			args: []string{
-				"# A Title",
-				"some content",
-			},
-			want:      "A Title",
-			wantIndex: 0,
-			wantErr:   false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, index, err := getTitle(tt.args)
-			if err != nil {
-				t.Errorf("expected no error, got: %v", err)
-			}
-			if got != tt.want {
-				t.Errorf("got: \"%v\" expected: \"%v\"", got, tt.want)
-			}
-			if index != tt.wantIndex {
-				t.Errorf("got: \"%v\" expected: \"%v\"", index, tt.wantIndex)
-			}
-		})
-	}
-
-}
-
 func TempFiles(t *testing.T, dir string, number int) []string {
 
 	t.Helper()
@@ -216,6 +179,59 @@ func Test_titleFormatter(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := titleFormatter(tt.args.title); got != tt.want {
 				t.Errorf("titleFormatter() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTitleFromReader(t *testing.T) {
+	tests := []struct {
+		name    string
+		contents    string
+		want    string
+		want1   int
+		wantErr bool
+	}{
+		{
+			name: "quick test",
+			contents: `# Header
+Content
+## SubHeader`,
+			want: "Header",
+			want1: 0,
+			wantErr: false,
+		},
+		{
+			name: "link test",
+			contents: `# [header link](https://example.com)
+text stuff`,
+			want: "Header Link",
+			want1: 0,
+			wantErr: false,
+		},
+		{
+			name: "White space",
+			contents: `
+# Header
+text`,
+			want: "Header",
+			want1: 1,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := strings.NewReader(tt.contents)
+			got, got1, err := titleFromReader(r)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("titleFromReader() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("titleFromReader() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("titleFromReader() got1 = %v, want %v", got1, tt.want1)
 			}
 		})
 	}
