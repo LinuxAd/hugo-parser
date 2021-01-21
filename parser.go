@@ -39,6 +39,15 @@ func getFileLines(filePath string) ([]string, error) {
 	return LinesFromReader(f)
 }
 
+func getTitle(path string) (string, int, error) {
+	f, err := os.Open(path)
+	if err != nil{
+		return "", 0, err
+	}
+	defer f.Close()
+	return titleFromReader(f)
+}
+
 func LinesFromReader(r io.Reader) ([]string, error) {
 	var lines []string
 	scanner := bufio.NewScanner(r)
@@ -142,19 +151,23 @@ func getFileList(cwd string) ([]string, error) {
 	return files, err
 }
 
-func getTitle(lines []string) (string, int, error) {
-	y := len(lines)/2 + 1 // adding plus one helps to avoid problems if file is only 1 line
-
+func titleFromReader(r io.Reader) (string, int, error) {
 	var title string
 	var index int
 	var err error
 
-	r := regexp.MustCompile(header)
+	lines,err := LinesFromReader(r)
+	if err != nil {
+		return title, index, err
+	}
+
+	y := len(lines)/2 + 1 // adding plus one helps to avoid problems if file is only 1 line
+	head := regexp.MustCompile(header)
 
 	for x := 0; x < y; x++ {
 		l := lines[x]
 		// get regex match groups for the line at index x
-		s := r.FindStringSubmatch(l)
+		s := head.FindStringSubmatch(l)
 		if len(s) < 1 {
 			continue
 		}
@@ -163,6 +176,9 @@ func getTitle(lines []string) (string, int, error) {
 			index = x
 			return title, index, err
 		}
+	}
+	if len(title) == 0 {
+		// title can't be grabbed from file contents - will use filename
 	}
 
 	return title, index, err

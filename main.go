@@ -44,12 +44,7 @@ func addFrontMatter(files []string) error {
 
 		log.Println("working on", info.Name())
 
-		lines, err := getFileLines(file)
-		if err != nil {
-			return err
-		}
-
-		title, i, err := getTitle(lines)
+		title, i, err := getTitle(file)
 		if err != nil {
 			return err
 		}
