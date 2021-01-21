@@ -139,10 +139,7 @@ func getTitle(lines []string) (string, error) {
 	var err error
 
 	pat := `^#(.+)$`
-	r, err := regexp.Compile(pat)
-	if err != nil {
-		return title, err
-	}
+	r := regexp.MustCompile(pat)
 
 	for x := 0; x < y; x++ {
 		l := lines[x]
@@ -152,10 +149,21 @@ func getTitle(lines []string) (string, error) {
 			continue
 		}
 		if s[1] != "" {
-			t := strings.TrimSpace(s[1])
-			return t, nil
+			return titleFormatter(s[1]), nil
 		}
 	}
 
 	return title, err
+}
+
+func titleFormatter(title string) string {
+	l := `\[(.+)\]\(.+\)`
+	link := regexp.MustCompile(l)
+	t := strings.TrimSpace(title)
+	if link.MatchString(t) {
+		// title is a link
+		g := link.FindStringSubmatch(t)
+		return strings.Title(g[1])
+	}
+	return strings.Title(t)
 }
