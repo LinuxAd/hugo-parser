@@ -160,7 +160,7 @@ func getTitle(lines []string) (string, int, error) {
 			continue
 		}
 		if s[1] != "" {
-			title = titleFormatter(title)
+			title = titleFormatter(s[1])
 			index = x
 			return title, index, err
 		}
