@@ -78,9 +78,7 @@ func TestGetFileList(t *testing.T) {
 				CleanDir(t, d)
 			})
 
-			want := []string{d}
-			w := TempFiles(t, d, tt.args.files)
-			want = append(want, w...)
+			want := TempFiles(t, d, tt.args.files)
 
 			got, err := getFileList(d)
 			if (err != nil) != tt.wantErr {
@@ -176,4 +174,44 @@ func InSlice(t *testing.T, slice []string, element string) bool {
 		}
 	}
 	return false
+}
+
+func Test_titleFormatter(t *testing.T) {
+	type args struct {
+		title string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "normal header",
+			args: args{
+				title: "Easy Header",
+			},
+			want: "Easy Header",
+		},
+		{
+			name: "add whitespace",
+			args: args{
+				title: " whitespace ",
+			},
+			want: "Whitespace",
+		},
+		{
+			name: "link",
+			args: args{
+				title: "[A Link](https://www.link.com)",
+			},
+			want: "A Link",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := titleFormatter(tt.args.title); got != tt.want {
+				t.Errorf("titleFormatter() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
