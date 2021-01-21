@@ -54,7 +54,7 @@ func addFrontMatter(files []string) error {
 		if err != nil {
 			return err
 		}
-		log.Println(title)
+		log.Println("title: ", title)
 
 		f := frontMatter{Title: title}
 		front, err := f.MarshalYAML()
